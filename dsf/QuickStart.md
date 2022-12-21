@@ -45,55 +45,19 @@ public interface Message {
 
         Message build();
 
-        default Builder withHeader(final String header, final Object value) {
-            final var h = requireNonNull(header).trim().toLowerCase();
-
-            switch (h) {
-                case "x-channel-a": // "x-id", "x-uuid",
-                    log().warning("MESSAGE: Illegal operation: Trying to overwrite `%s` header: [`%s` -> `%s`]. "
-                        + "Illegal operation ignored.", h, "old", "new");
-                    break;
-                default:
-                    // do default assignment
-                    ;
-            }
-            return this;
-        }
+        Builder withHeader(final String header, final Object value);
 
         default Builder withHeaders(final Map<String, Object> headers) {
             requireNonNull(headers).forEach(this::withHeader);
             return this;
         }
 
-        default Builder withPayload(final Object payload) {
-            requireNonNull(payload);
-            return this;
-        }
+        Builder withPayload(final Object payload);
 
     }
 
-    AtomicLong COUNTER = new AtomicLong();
-
     static Builder newBuilder() {
-        return () -> new Message() {
-
-            private final long id = COUNTER.incrementAndGet();
-            private final UUID uuid = UUID.randomUUID();
-
-            @Override
-            public <T> T header(final String header) {
-                return null;
-            }
-
-            @Override
-            public long id() {
-                return this.id;
-            }
-
-            @Override
-            public UUID uuid() {
-                return this.uuid;
-            }};
+        return new DefaultMessageBuilder();
     }
 
     default String channelA() {
@@ -121,6 +85,8 @@ public interface Message {
         return header("x-id", 0L);
     }
 
+    <T> T payload();
+
     default Duration timeToLive() {
         return header("x-ttl", Duration.ZERO);
     }
@@ -131,4 +97,76 @@ public interface Message {
 
 }
 
+final class DefaultMessage implements Message {
+
+    private final Map<String, Object> headers;
+    private final Object payload;
+
+    DefaultMessage(final Map<String, Object> headers, final Object payload) {
+        this.headers = headers;
+        this.payload = payload;
+    }
+
+    @Override
+    public <T> T header(final String header) {
+        return asType(this.headers.get(header));
+    }
+
+    @Override
+    public <T> T payload() {
+        return asType(this.payload);
+    }
+
+}
+
+
+public class DefaultMessageBuilder implements Message.Builder {
+
+    private static final AtomicLong COUNTER = new AtomicLong();
+
+    private final Map<String, Object> headers;
+    private Object payload;
+
+    public DefaultMessageBuilder() {
+        this.headers = new HashMap<>();
+    }
+
+    @Override
+    public Message build() {
+        this.headers.put("x-id", COUNTER.incrementAndGet());
+
+        return new DefaultMessage(copyOf(this.headers),
+            requireNonNull(this.payload, "Unable to create message with null payload"));
+    }
+
+    @Override
+    public Builder withHeader(final String header, final Object value) {
+        final var h = requireNonNull(header).trim().toLowerCase();
+
+        switch (h) {
+            case "x-id":
+            case "x-uuid":
+                break;
+            case "x-channel-a":
+                log().warning("MESSAGE: Illegal operation: Trying to overwrite `%s` header: [`%s` -> `%s`]. "
+                    + "Illegal operation ignored.", h, "old", "new");
+                break;
+            default:
+                final var v = null == value ? this.headers.remove(header) : this.headers.put(header, value);
+
+                if (nonNull(v)) {
+                    log().warning("MESSAGE: A previously assigned header `%s` value `%s` has been replaced with `%s`.",
+                        h, v, value);
+                }
+        }
+        return this;
+    }
+
+    @Override
+    public Builder withPayload(final Object payload) {
+        this.payload = requireNonNull(payload);
+        return this;
+    }
+
+}
 ```
