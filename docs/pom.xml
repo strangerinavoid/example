@@ -1,0 +1,4 @@
+					<configuration>
+						<stylesheetfile>${maven.multiModuleProjectDirectory}/.mvn/javadoc/stylesheet.css</stylesheetfile>
+						<notimestamp>true</notimestamp>
+					</configuration>
