@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+# Завершать выполнение скрипта при ошибках
+set -euo pipefail
+
+# Конфигурация приложения
+JAR_DIR="target"
+JAR_NAME="pacman-1.0.0-SNAPSHOT.jar"
+JAR_PATH="${JAR_DIR}/${JAR_NAME}"
+
+echo "=== InLabSoft Pacman Runner ==="
+
+# 1. Проверка наличия Java в системе
+if ! command -v java &> /dev/null; then
+    echo "Ошибка: Java не установлена в вашей системе или отсутствует в PATH." >&2
+    exit 1
+fi
+
+# 2. Проверка версии Java (требуется Java 25 или выше)
+JAVA_VER=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F '.' '{print $1}')
+# Если формат вывода отличается (например, "25-ea"), берем первые цифры
+if [ -z "$JAVA_VER" ]; then
+    JAVA_VER=$(java -version 2>&1 | head -n 1 | grep -oE '[0-9]+' | head -n 1)
+fi
+
+if [ "$JAVA_VER" -lt 25 ]; then
+    echo "Ошибка: Для запуска приложения необходима Java 25 или выше." >&2
+    echo "Текущая версия Java: $JAVA_VER" >&2
+    exit 1
+fi
+
+# 3. Проверка наличия JAR-файла
+if [ ! -f "$JAR_PATH" ]; then
+    echo "Ошибка: Файл не найден: $JAR_PATH" >&2
+    echo "Пожалуйста, сначала соберите проект командой: mvn clean package" >&2
+    exit 1
+fi
+
+# 4. Запуск приложения со всеми переданными аргументами командной строки
+echo "Запуск $JAR_NAME с параметрами: $@"
+java -jar "$JAR_PATH" "$@"

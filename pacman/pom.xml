@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+		<modelVersion>4.0.0</modelVersion>
+
+		<groupId>com.inlabsoft</groupId>
+		<artifactId>pacman</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+		<packaging>jar</packaging>
+
+		<name>Pacman</name>
+		<description>InLabSoft Pacman - A Java 25 project</description>
+
+		<properties>
+				<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+				<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+				<!-- Актуальные версии для экосистемы Java 25 -->
+				<java.version>25</java.version>
+				<picocli.version>4.7.6</picocli.version>
+				<junit.version>5.12.0</junit.version>
+				<slf4j.version>2.0.16</slf4j.version>
+		</properties>
+
+		<dependencies>
+				<!-- PicoCLI для разбора аргументов CLI -->
+				<dependency>
+						<groupId>info.picocli</groupId>
+						<artifactId>picocli</artifactId>
+						<version>${picocli.version}</version>
+				</dependency>
+
+				<!-- Логирование SLF4J -->
+				<dependency>
+						<groupId>org.slf4j</groupId>
+						<artifactId>slf4j-api</artifactId>
+						<version>${slf4j.version}</version>
+				</dependency>
+
+				<!-- JUnit 5 для тестов (Обновлено до 5.12.0) -->
+				<dependency>
+						<groupId>org.junit.jupiter</groupId>
+						<artifactId>junit-jupiter-api</artifactId>
+						<version>${junit.version}</version>
+						<scope>test</scope>
+				</dependency>
+				<dependency>
+						<groupId>org.junit.jupiter</groupId>
+						<artifactId>junit-jupiter-engine</artifactId>
+						<version>${junit.version}</version>
+						<scope>test</scope>
+				</dependency>
+		</dependencies>
+
+		<build>
+				<plugins>
+						<!-- Maven Compiler Plugin — Добавлен процессор аннотаций PicoCLI -->
+						<plugin>
+								<groupId>org.apache.maven.plugins</groupId>
+								<artifactId>maven-compiler-plugin</artifactId>
+								<version>3.15.0</version>
+								<configuration>
+										<release>${java.version}</release>
+										<encoding>${project.build.sourceEncoding}</encoding>
+										<showWarnings>true</showWarnings>
+										<showDeprecation>true</showDeprecation>
+										<annotationProcessorPaths>
+												<path>
+														<groupId>info.picocli</groupId>
+														<artifactId>picocli-codegen</artifactId>
+														<version>${picocli.version}</version>
+												</path>
+										</annotationProcessorPaths>
+										<compilerArgs>
+												<arg>-Aproject=${project.groupId}/${project.artifactId}</arg>
+										</compilerArgs>
+								</configuration>
+						</plugin>
+
+						<!-- Maven JAR Plugin — Актуализирован под работу с модулями Java 25 -->
+						<plugin>
+								<groupId>org.apache.maven.plugins</groupId>
+								<artifactId>maven-jar-plugin</artifactId>
+								<version>3.4.2</version>
+								<configuration>
+										<archive>
+												<manifest>
+														<mainClass>com.inlabsoft.pacman.Pacman</mainClass>
+														<addClasspath>true</addClasspath>
+												</manifest>
+										</archive>
+								</configuration>
+						</plugin>
+
+						<!-- Maven Shade Plugin — Обновлен до 3.6.2 для полной поддержки байт-кода Java 25 -->
+						<plugin>
+								<groupId>org.apache.maven.plugins</groupId>
+								<artifactId>maven-shade-plugin</artifactId>
+								<version>3.6.2</version>
+								<executions>
+										<execution>
+												<phase>package</phase>
+												<goals>
+														<goal>shade</goal>
+												</goals>
+												<configuration>
+														<createDependencyReducedPom>false</createDependencyReducedPom>
+														<transformers>
+																<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+																		<mainClass>com.inlabsoft.pacman.Pacman</mainClass>
+																</transformer>
+																<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+														</transformers>
+												</configuration>
+										</execution>
+								</executions>
+						</plugin>
+
+						<!-- Surefire Plugin для стабильного запуска тестов -->
+						<plugin>
+								<groupId>org.apache.maven.plugins</groupId>
+								<artifactId>maven-surefire-plugin</artifactId>
+								<version>3.5.2</version>
+						</plugin>
+				</plugins>
+		</build>
+</project>
